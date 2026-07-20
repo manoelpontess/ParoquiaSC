@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { getListaVendas } from '@/app/actions'
+import { getListaVendas, liberarMesa } from '@/app/actions'
 
 export type MesaVendida = {
   numero: number
@@ -29,6 +29,7 @@ export function ListaVendas() {
   const [vendas, setVendas] = useState<MesaVendida[]>([])
   const [loading, setLoading] = useState(true)
   const [ultimaAtualiz, setUltimaAtualiz] = useState<Date | null>(null)
+  const [processandoCancelamento, setProcessandoCancelamento] = useState<number | null>(null)
 
   const carregarVendas = async () => {
     setLoading(true)
@@ -46,6 +47,23 @@ export function ListaVendas() {
     return () => window.removeEventListener('focus', handleFocus)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleCancelarMesa = async (numero: number) => {
+    if (!window.confirm(`⚠️ ATENÇÃO: Tem certeza que deseja cancelar e liberar a mesa #${numero}? Ela voltará a ficar disponível para compra.`)) {
+      return
+    }
+    
+    setProcessandoCancelamento(numero)
+    const res = await liberarMesa(numero)
+    
+    if (res.success) {
+      // Remove da lista localmente para resposta imediata da UI
+      setVendas(prev => prev.filter(m => m.numero !== numero))
+    } else {
+      alert(`Erro ao cancelar mesa: ${res.error}`)
+    }
+    setProcessandoCancelamento(null)
+  }
 
   const mesasVendidas = vendas.filter(v => v.status === 'vendida').length
   const mesasReservadas = vendas.filter(v => v.status === 'reservada').length
@@ -89,6 +107,7 @@ export function ListaVendas() {
                 <th>Comprador</th>
                 <th>Telefone</th>
                 <th>Reservado em</th>
+                <th style={{textAlign: 'right'}}>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -104,6 +123,8 @@ export function ListaVendas() {
                     linkWhats = `https://wa.me/${numFinal}?text=${encodeURIComponent(msg)}`
                   }
                 }
+
+                const isCanceling = processandoCancelamento === mesa.numero
 
                 return (
                   <tr key={mesa.numero}>
@@ -131,6 +152,16 @@ export function ListaVendas() {
                       </div>
                     </td>
                     <td className="col-data">{formatarData(mesa.reservado_em)}</td>
+                    <td style={{textAlign: 'right'}}>
+                      <button 
+                        onClick={() => handleCancelarMesa(mesa.numero)}
+                        disabled={isCanceling}
+                        className="cancel-btn"
+                        title="Cancelar e liberar esta mesa"
+                      >
+                        {isCanceling ? '...' : '❌ Cancelar'}
+                      </button>
+                    </td>
                   </tr>
                 )
               })}
