@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { MapaMesas } from '@/components/MapaMesas'
 import { ModalComprador } from '@/components/ModalComprador'
 import { ModalPix } from '@/components/ModalPix'
+import { ListaVendas } from '@/components/ListaVendas'
 import { useMesasRealtime, Mesa } from '@/hooks/useMesasRealtime'
 import { createClient } from '@/lib/supabase/client'
 import { gerarPayloadPix } from '@/lib/pix'
@@ -19,6 +20,7 @@ const fallbackMesas: Mesa[] = Array.from({ length: 200 }, (_, i) => {
 })
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<'mapa' | 'lista'>('mapa')
   const mesas = useMesasRealtime(fallbackMesas) 
   
   const [selecionadas, setSelecionadas] = useState<Set<number>>(new Set())
@@ -117,65 +119,89 @@ export default function Home() {
     <>
       <header>
         <h1>Bingão Paróquia Santa Cruz</h1>
-        <div className="subtitle">Toque nas mesas para selecionar. Arraste a área do salão para o lado se necessário.</div>
-        <div className="legend">
-          <span><span className="dot" style={{ background: '#EFF6EE', border: '1px solid var(--green-line)' }}></span>Livre</span>
-          <span><span className="dot" style={{ background: 'var(--amber)' }}></span>Selecionada</span>
-          <span><span className="dot" style={{ background: 'var(--sold)' }}></span>Vendida/Reservada</span>
-          <div className="config-row">
-            <span>
-              <label htmlFor="preco">Valor/mesa (R$)</label>{' '}
-              <input type="number" id="preco" value={preco} onChange={e => setPreco(Number(e.target.value))} min="0" step="5" />
-            </span>
-            <span>
-              <label htmlFor="recebedorNome">Recebedor Pix</label>{' '}
-              <input type="text" id="recebedorNome" value={recebedorNome} onChange={e => setRecebedorNome(e.target.value)} />
-            </span>
-            <span>
-              <label htmlFor="recebedorCidade">Cidade</label>{' '}
-              <input type="text" id="recebedorCidade" value={recebedorCidade} onChange={e => setRecebedorCidade(e.target.value)} />
-            </span>
-          </div>
+        <div className="subtitle">Gestão de Mesas e Reservas</div>
+        
+        <div className="tabs-container">
+          <button 
+            className={`tab-btn ${activeTab === 'mapa' ? 'active' : ''}`}
+            onClick={() => setActiveTab('mapa')}
+          >
+            Mapa de Mesas
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'lista' ? 'active' : ''}`}
+            onClick={() => setActiveTab('lista')}
+          >
+            Lista de Vendas
+          </button>
         </div>
+
+        {activeTab === 'mapa' && (
+          <div className="legend">
+            <span><span className="dot" style={{ background: '#EFF6EE', border: '1px solid var(--green-line)' }}></span>Livre</span>
+            <span><span className="dot" style={{ background: 'var(--amber)' }}></span>Selecionada</span>
+            <span><span className="dot" style={{ background: 'var(--sold)' }}></span>Vendida/Reservada</span>
+            <div className="config-row">
+              <span>
+                <label htmlFor="preco">Valor/mesa (R$)</label>{' '}
+                <input type="number" id="preco" value={preco} onChange={e => setPreco(Number(e.target.value))} min="0" step="5" />
+              </span>
+              <span>
+                <label htmlFor="recebedorNome">Recebedor Pix</label>{' '}
+                <input type="text" id="recebedorNome" value={recebedorNome} onChange={e => setRecebedorNome(e.target.value)} />
+              </span>
+              <span>
+                <label htmlFor="recebedorCidade">Cidade</label>{' '}
+                <input type="text" id="recebedorCidade" value={recebedorCidade} onChange={e => setRecebedorCidade(e.target.value)} />
+              </span>
+            </div>
+          </div>
+        )}
       </header>
 
-      <MapaMesas mesas={mesas} selecionadas={selecionadas} onToggleMesa={toggleMesa} />
+      {activeTab === 'mapa' ? (
+        <>
+          <MapaMesas mesas={mesas} selecionadas={selecionadas} onToggleMesa={toggleMesa} />
 
-      <div className="summary-bar">
-        <div className="summary-text" id="summary">
-          {selecionadas.size === 0 ? (
-            'Nenhuma mesa selecionada'
-          ) : (
-            <>
-              <b>{selecionadas.size} mesa(s)</b> selecionada(s): {listaMesasTexto()}
-              {' '}&nbsp;·&nbsp; Total: <b>R$ {total.toFixed(2).replace('.', ',')}</b>
-            </>
-          )}
-        </div>
-        <button className="primary-btn" disabled={selecionadas.size === 0} onClick={handleAvançar}>
-          Avançar
-        </button>
-      </div>
+          <div className="summary-bar">
+            <div className="summary-text" id="summary">
+              {selecionadas.size === 0 ? (
+                'Nenhuma mesa selecionada'
+              ) : (
+                <>
+                  <b>{selecionadas.size} mesa(s)</b> selecionada(s): {listaMesasTexto()}
+                  {' '}&nbsp;·&nbsp; Total: <b>R$ {total.toFixed(2).replace('.', ',')}</b>
+                </>
+              )}
+            </div>
+            <button className="primary-btn" disabled={selecionadas.size === 0} onClick={handleAvançar}>
+              Avançar
+            </button>
+          </div>
 
-      <ModalComprador
-        isOpen={modalCompradorOpen}
-        onClose={() => setModalCompradorOpen(false)}
-        onContinue={handleCompradorContinue}
-        resumoMesas={`${selecionadas.size} mesa(s): ${listaMesasTexto()} — Total R$ ${total.toFixed(2).replace('.', ',')}`}
-      />
+          <ModalComprador
+            isOpen={modalCompradorOpen}
+            onClose={() => setModalCompradorOpen(false)}
+            onContinue={handleCompradorContinue}
+            resumoMesas={`${selecionadas.size} mesa(s): ${listaMesasTexto()} — Total R$ ${total.toFixed(2).replace('.', ',')}`}
+          />
 
-      <ModalPix
-        isOpen={modalPixOpen}
-        onClose={() => {
-          setModalPixOpen(false)
-          setModalCompradorOpen(true)
-        }}
-        onConfirm={handleConfirmarPagamento}
-        resumoMesas={`${compradorAtual.nome} — ${selecionadas.size} mesa(s): ${listaMesasTexto()}`}
-        total={vendaAtual?.total || total}
-        payloadPix={payloadPix}
-        isLoading={isConfirming}
-      />
+          <ModalPix
+            isOpen={modalPixOpen}
+            onClose={() => {
+              setModalPixOpen(false)
+              setModalCompradorOpen(true)
+            }}
+            onConfirm={handleConfirmarPagamento}
+            resumoMesas={`${compradorAtual.nome} — ${selecionadas.size} mesa(s): ${listaMesasTexto()}`}
+            total={vendaAtual?.total || total}
+            payloadPix={payloadPix}
+            isLoading={isConfirming}
+          />
+        </>
+      ) : (
+        <ListaVendas />
+      )}
     </>
   )
 }
