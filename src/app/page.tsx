@@ -205,7 +205,6 @@ export default function Home() {
             ⚙️ Configurações
           </button>
         </div>
-        </div>
 
         {activeTab === 'mapa' && (
           <div className="legend">
