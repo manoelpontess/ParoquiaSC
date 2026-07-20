@@ -92,12 +92,22 @@ export default function Home() {
 
     setVendaAtual({ id: venda_id, total: valor_final, mesas: mesasArray })
 
+    // Cria o identificador do PIX baseado nas mesas
+    // O PIX aceita no máximo 25 caracteres alfanuméricos
+    let txidMesas = ''
+    if (mesasArray.length === 1) {
+      txidMesas = 'MESA' + mesasArray[0].toString().padStart(2, '0')
+    } else {
+      const nums = mesasArray.sort((a,b)=>a-b).map(m => m.toString().padStart(2, '0')).join('')
+      txidMesas = 'M' + nums.slice(0, 15) // Corta se forem MUITAS mesas para não quebrar o limite
+    }
+
     const pix = gerarPayloadPix({
       chave: '04026811002590',
       nome: recebedorNome || 'Paroquia Santa Cruz',
       cidade: recebedorCidade || 'Manaus',
       valor: valor_final,
-      txid: 'BINGAOSC' + venda_id.slice(0, 8).toUpperCase(),
+      txid: 'BINGAOSC' + txidMesas,
     })
 
     setPayloadPix(pix)
