@@ -673,7 +673,41 @@ h1{
   background: #FEF2F2;
   border-color: #F87171;
 }
-.cancel-btn:disabled {
+
+/* ---- Configurações ---- */
+.config-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.config-box {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-color);
+}
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-group input:focus {
+  border-color: var(--primary);
+}.cancel-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

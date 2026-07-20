@@ -6,6 +6,7 @@ import { ModalComprador } from '@/components/ModalComprador'
 import { ModalPix } from '@/components/ModalPix'
 import { ModalSucesso } from '@/components/ModalSucesso'
 import { ListaVendas } from '@/components/ListaVendas'
+import { Configuracoes } from '@/components/Configuracoes'
 import { useMesasRealtime, Mesa } from '@/hooks/useMesasRealtime'
 import { createClient } from '@/lib/supabase/client'
 import { gerarPayloadPix } from '@/lib/pix'
@@ -22,7 +23,7 @@ const fallbackMesas: Mesa[] = Array.from({ length: 200 }, (_, i) => {
 })
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'mapa' | 'lista'>('mapa')
+  const [activeTab, setActiveTab] = useState<'mapa' | 'lista' | 'config'>('mapa')
   const mesas = useMesasRealtime(fallbackMesas)
 
   const mesasLivres = mesas.filter(m => m.status === 'livre').length
@@ -123,6 +124,41 @@ export default function Home() {
       await supabase.rpc('confirmar_pagamento', { p_venda_id: vendaAtual.id })
     }
 
+    // Dispara OpenWA se estiver configurado e tiver telefone
+    try {
+      const url = localStorage.getItem('openwa_url')
+      const key = localStorage.getItem('openwa_key')
+      const session = localStorage.getItem('openwa_session') || 'default'
+      
+      if (url && compradorAtual.telefone) {
+        const numero = compradorAtual.telefone.replace(/\D/g, '')
+        if (numero) {
+          const numeroFinal = numero.length <= 11 ? `55${numero}` : numero
+          const mesasStr = vendaAtual.mesas.join(', ')
+          const msg = `Olá ${compradorAtual.nome}, o pagamento da mesa ${mesasStr} no Bingão da Paróquia Santa Cruz foi confirmado com sucesso! 🎉`
+
+          const baseURL = url.replace(/\/$/, '')
+          await fetch(`${baseURL}/api/sendText`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': key ? `Bearer ${key}` : '',
+              'x-api-key': key || ''
+            },
+            body: JSON.stringify({
+              session: session,
+              chatId: `${numeroFinal}@c.us`,
+              phone: numeroFinal,
+              text: msg,
+              isGroup: false
+            })
+          }).catch(err => console.error('Erro ao chamar OpenWA:', err))
+        }
+      }
+    } catch (e) {
+      console.error('Erro geral ao notificar OpenWA:', e)
+    }
+
     setIsConfirming(false)
     setModalPixOpen(false)
     setModalSucessoOpen(true)
@@ -131,6 +167,7 @@ export default function Home() {
   const handleFecharSucesso = () => {
     setSelecionadas(new Set())
     setVendaAtual(null)
+    setCompradorAtual({ nome: '', telefone: '' })
     setModalSucessoOpen(false)
   }
 
@@ -161,6 +198,13 @@ export default function Home() {
           >
             📋 Lista de Vendas
           </button>
+          <button
+            className={`tab-btn ${activeTab === 'config' ? 'active' : ''}`}
+            onClick={() => setActiveTab('config')}
+          >
+            ⚙️ Configurações
+          </button>
+        </div>
         </div>
 
         {activeTab === 'mapa' && (
@@ -186,7 +230,7 @@ export default function Home() {
         )}
       </header>
 
-      {activeTab === 'mapa' ? (
+      {activeTab === 'mapa' && (
         <>
           <MapaMesas mesas={mesas} selecionadas={selecionadas} onToggleMesa={toggleMesa} />
 
@@ -243,8 +287,14 @@ export default function Home() {
             total={vendaAtual?.total || 0}
           />
         </>
-      ) : (
+      )}
+
+      {activeTab === 'lista' && (
         <ListaVendas />
+      )}
+
+      {activeTab === 'config' && (
+        <Configuracoes />
       )}
     </>
   )
