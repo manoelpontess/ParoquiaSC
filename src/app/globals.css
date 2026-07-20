@@ -635,3 +635,25 @@ h1{
   .summary-bar > div { width: 100%; }
 }
 
+/* ---- Botão WhatsApp ---- */
+.whatsapp-btn {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  background: #25D366;
+  color: white;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(37, 211, 102, 0.2);
+}
+.whatsapp-btn:hover {
+  background: #20BA56;
+  box-shadow: 0 4px 6px rgba(37, 211, 102, 0.3);
+  transform: translateY(-1px);
+}
+.whatsapp-btn:active {
+  transform: translateY(0);
+}

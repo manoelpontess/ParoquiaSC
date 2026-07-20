@@ -94,6 +94,17 @@ export function ListaVendas() {
             <tbody>
               {vendas.map((mesa) => {
                 const comprador = mesa.vendas?.compradores
+                
+                let linkWhats = ''
+                if (comprador?.telefone) {
+                  const apenasNumeros = comprador.telefone.replace(/\D/g, '')
+                  if (apenasNumeros) {
+                    const numFinal = apenasNumeros.length <= 11 ? `55${apenasNumeros}` : apenasNumeros
+                    const msg = `Olá ${comprador.nome}, sua compra da mesa ${mesa.numero} no Bingão da Paróquia Santa Cruz foi registrada com sucesso!`
+                    linkWhats = `https://wa.me/${numFinal}?text=${encodeURIComponent(msg)}`
+                  }
+                }
+
                 return (
                   <tr key={mesa.numero}>
                     <td className="col-mesa"><strong>#{mesa.numero}</strong></td>
@@ -103,7 +114,22 @@ export function ListaVendas() {
                       </span>
                     </td>
                     <td>{comprador?.nome || 'N/A'}</td>
-                    <td>{comprador?.telefone || '-'}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {comprador?.telefone || '-'}
+                        {linkWhats && (
+                          <a 
+                            href={linkWhats}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="whatsapp-btn"
+                            title="Enviar WhatsApp"
+                          >
+                            WhatsApp 💬
+                          </a>
+                        )}
+                      </div>
+                    </td>
                     <td className="col-data">{formatarData(mesa.reservado_em)}</td>
                   </tr>
                 )
