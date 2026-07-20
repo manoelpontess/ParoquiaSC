@@ -1,4 +1,5 @@
 'use client'
+import { useMemo } from 'react'
 import { Mesa } from '@/hooks/useMesasRealtime'
 
 type Props = {
@@ -8,20 +9,26 @@ type Props = {
 }
 
 export function MapaMesas({ mesas, selecionadas, onToggleMesa }: Props) {
-  // Helpers para renderizar os blocos
+  // Converte a lista em Map para busca O(1) em vez de O(n) por mesa
+  const mesasMap = useMemo(() => {
+    const m = new Map<number, Mesa>()
+    mesas.forEach(mesa => m.set(mesa.numero, mesa))
+    return m
+  }, [mesas])
+
   const renderBlock = (startTop: number, rows: number, cols: number) => {
     const botoes = []
     for (let r = 0; r < rows; r++) {
       const rowStart = startTop - cols * r
       for (let c = 0; c < cols; c++) {
         const num = rowStart - c
-        const mesa = mesas.find((m) => m.numero === num)
+        const mesa = mesasMap.get(num)
         const status = mesa?.status || 'livre'
         const isSelected = selecionadas.has(num)
         
         let className = 'mesa'
         if (status === 'vendida') className += ' vendida'
-        else if (status === 'reservada') className += ' reservada' // Tratamos reservada visualmente igual a vendida
+        else if (status === 'reservada') className += ' reservada'
         else if (isSelected) className += ' selecionada'
 
         botoes.push(
@@ -30,6 +37,7 @@ export function MapaMesas({ mesas, selecionadas, onToggleMesa }: Props) {
             className={className}
             disabled={status !== 'livre'}
             onClick={() => onToggleMesa(num)}
+            title={status !== 'livre' ? `Mesa ${num} — ${status}` : `Mesa ${num} — livre`}
           >
             {num}
           </button>

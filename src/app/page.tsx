@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { MapaMesas } from '@/components/MapaMesas'
 import { ModalComprador } from '@/components/ModalComprador'
 import { ModalPix } from '@/components/ModalPix'
+import { ModalSucesso } from '@/components/ModalSucesso'
 import { ListaVendas } from '@/components/ListaVendas'
 import { useMesasRealtime, Mesa } from '@/hooks/useMesasRealtime'
 import { createClient } from '@/lib/supabase/client'
 import { gerarPayloadPix } from '@/lib/pix'
 
+// Fallback: todas livres — será substituído pelos dados reais do banco no hook
 const fallbackMesas: Mesa[] = Array.from({ length: 200 }, (_, i) => {
   const n = i + 1
   return {
@@ -21,8 +23,10 @@ const fallbackMesas: Mesa[] = Array.from({ length: 200 }, (_, i) => {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'mapa' | 'lista'>('mapa')
-  const mesas = useMesasRealtime(fallbackMesas) 
-  
+  const mesas = useMesasRealtime(fallbackMesas)
+
+  const mesasLivres = mesas.filter(m => m.status === 'livre').length
+
   const [selecionadas, setSelecionadas] = useState<Set<number>>(new Set())
   const [preco, setPreco] = useState(50)
   const [recebedorNome, setRecebedorNome] = useState('Paroquia Santa Cruz')
@@ -30,41 +34,41 @@ export default function Home() {
 
   const [modalCompradorOpen, setModalCompradorOpen] = useState(false)
   const [modalPixOpen, setModalPixOpen] = useState(false)
+  const [modalSucessoOpen, setModalSucessoOpen] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
+  const [erroReserva, setErroReserva] = useState('')
 
   const [compradorAtual, setCompradorAtual] = useState({ nome: '', telefone: '' })
-  const [vendaAtual, setVendaAtual] = useState<{ id: string, total: number } | null>(null)
+  const [vendaAtual, setVendaAtual] = useState<{ id: string, total: number, mesas: number[] } | null>(null)
   const [payloadPix, setPayloadPix] = useState('')
 
   const total = selecionadas.size * preco
 
-  const listaMesasTexto = () => {
-    return Array.from(selecionadas).sort((a, b) => a - b).join(', ')
-  }
+  const listaMesasTexto = () =>
+    Array.from(selecionadas).sort((a, b) => a - b).join(', ')
 
   const toggleMesa = (num: number) => {
-    const novaSelecionadas = new Set(selecionadas)
-    if (novaSelecionadas.has(num)) {
-      novaSelecionadas.delete(num)
-    } else {
-      novaSelecionadas.add(num)
-    }
-    setSelecionadas(novaSelecionadas)
+    setSelecionadas(prev => {
+      const next = new Set(prev)
+      next.has(num) ? next.delete(num) : next.add(num)
+      return next
+    })
   }
 
   const handleAvançar = () => {
     if (selecionadas.size === 0) return
+    setErroReserva('')
     setModalCompradorOpen(true)
   }
 
   const handleCompradorContinue = async (nome: string, telefone: string) => {
     setCompradorAtual({ nome, telefone })
     setModalCompradorOpen(false)
+    setErroReserva('')
 
     const supabase = createClient()
     const mesasArray = Array.from(selecionadas)
-    
-    // Tratando local/fallback para caso as env vars do supabase não existam ainda
+
     let venda_id = crypto.randomUUID()
     let valor_final = total
 
@@ -75,16 +79,19 @@ export default function Home() {
         p_telefone: telefone,
       })
       if (error) {
-        console.error(error)
-        alert('Ocorreu um erro ao tentar reservar as mesas (Supabase). Usando modo fallback local.')
+        const mensagem = error.message?.includes('indisponív')
+          ? `Mesa já vendida por outra pessoa. Por favor, selecione outra.`
+          : `Erro ao reservar: ${error.message}`
+        setErroReserva(mensagem)
+        return
       } else {
         venda_id = data.venda_id
         valor_final = data.total
       }
     }
 
-    setVendaAtual({ id: venda_id, total: valor_final })
-    
+    setVendaAtual({ id: venda_id, total: valor_final, mesas: mesasArray })
+
     const pix = gerarPayloadPix({
       chave: '04026811002590',
       nome: recebedorNome || 'Paroquia Santa Cruz',
@@ -92,7 +99,7 @@ export default function Home() {
       valor: valor_final,
       txid: 'BINGAOSC' + venda_id.slice(0, 8).toUpperCase(),
     })
-    
+
     setPayloadPix(pix)
     setModalPixOpen(true)
   }
@@ -103,36 +110,46 @@ export default function Home() {
 
     if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
       const supabase = createClient()
-      const { error } = await supabase.rpc('confirmar_pagamento', {
-        p_venda_id: vendaAtual.id
-      })
-      if (error) console.error(error)
+      await supabase.rpc('confirmar_pagamento', { p_venda_id: vendaAtual.id })
     }
 
     setIsConfirming(false)
-    setSelecionadas(new Set())
     setModalPixOpen(false)
-    alert('Venda registrada com sucesso!\n\n(Em produção, o comprovante seria impresso e a mesa marcada como vendida no banco de dados para todos os vendedores em tempo real.)')
+    setModalSucessoOpen(true)
+  }
+
+  const handleFecharSucesso = () => {
+    setSelecionadas(new Set())
+    setVendaAtual(null)
+    setModalSucessoOpen(false)
   }
 
   return (
     <>
       <header>
-        <h1>Bingão Paróquia Santa Cruz</h1>
-        <div className="subtitle">Gestão de Mesas e Reservas</div>
-        
+        <div className="header-top">
+          <div>
+            <h1>Bingão Paróquia Santa Cruz</h1>
+            <div className="subtitle">Gestão de Mesas e Reservas</div>
+          </div>
+          <div className="mesas-counter">
+            <span className="counter-num">{mesasLivres}</span>
+            <span className="counter-label">de 200 livres</span>
+          </div>
+        </div>
+
         <div className="tabs-container">
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'mapa' ? 'active' : ''}`}
             onClick={() => setActiveTab('mapa')}
           >
-            Mapa de Mesas
+            🗺️ Mapa de Mesas
           </button>
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'lista' ? 'active' : ''}`}
             onClick={() => setActiveTab('lista')}
           >
-            Lista de Vendas
+            📋 Lista de Vendas
           </button>
         </div>
 
@@ -165,7 +182,9 @@ export default function Home() {
 
           <div className="summary-bar">
             <div className="summary-text" id="summary">
-              {selecionadas.size === 0 ? (
+              {erroReserva ? (
+                <span className="erro-inline">⚠️ {erroReserva}</span>
+              ) : selecionadas.size === 0 ? (
                 'Nenhuma mesa selecionada'
               ) : (
                 <>
@@ -174,9 +193,16 @@ export default function Home() {
                 </>
               )}
             </div>
-            <button className="primary-btn" disabled={selecionadas.size === 0} onClick={handleAvançar}>
-              Avançar
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {selecionadas.size > 0 && (
+                <button className="ghost-btn" onClick={() => setSelecionadas(new Set())}>
+                  Limpar
+                </button>
+              )}
+              <button className="primary-btn" disabled={selecionadas.size === 0} onClick={handleAvançar}>
+                Avançar
+              </button>
+            </div>
           </div>
 
           <ModalComprador
@@ -197,6 +223,14 @@ export default function Home() {
             total={vendaAtual?.total || total}
             payloadPix={payloadPix}
             isLoading={isConfirming}
+          />
+
+          <ModalSucesso
+            isOpen={modalSucessoOpen}
+            onClose={handleFecharSucesso}
+            mesas={vendaAtual?.mesas || []}
+            comprador={compradorAtual.nome}
+            total={vendaAtual?.total || 0}
           />
         </>
       ) : (
