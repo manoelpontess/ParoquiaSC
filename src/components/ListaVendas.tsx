@@ -10,6 +10,7 @@ export type MesaVendida = {
     id: string
     total: number
     status: string
+    area_missionaria: string | null
     compradores: {
       nome: string
       telefone: string | null
@@ -51,12 +52,14 @@ async function exportarLista() {
     const statusLabel = m.status === 'vendida' ? 'PAGO' : m.status === 'reservada' ? 'RESERVADA' : 'LIVRE'
     const statusCor = m.status === 'vendida' ? '#16a34a' : m.status === 'reservada' ? '#d97706' : '#94a3b8'
     const setor = gerarSetor(m.numero)
+    const area = venda?.area_missionaria || '—'
     return `
       <tr style="background:${m.status === 'livre' ? '#f9fafb' : 'white'}">
         <td style="font-weight:700;color:#15803d;font-size:15px">#${String(m.numero).padStart(3,'0')}</td>
         <td>${comprador?.nome || '<span style="color:#94a3b8">—</span>'}</td>
         <td style="color:#4b5563">${comprador?.telefone || '—'}</td>
         <td style="font-size:12px;color:#6b7280">${setor}</td>
+        <td style="font-size:12px">${area}</td>
         <td><span style="background:${statusCor}22;color:${statusCor};padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">${statusLabel}</span></td>
       </tr>`
   }).join('')
@@ -104,6 +107,7 @@ async function exportarLista() {
         <th>Comprador</th>
         <th>Telefone</th>
         <th>Local</th>
+        <th>Área Missionária</th>
         <th>Status</th>
       </tr>
     </thead>
@@ -212,6 +216,7 @@ export function ListaVendas() {
                 <th>Status</th>
                 <th>Comprador</th>
                 <th>Telefone</th>
+                <th>Área Missionária</th>
                 <th>Valor</th>
                 <th>Reservado em</th>
                 <th style={{textAlign: 'right'}}>Ações</th>
@@ -223,7 +228,7 @@ export function ListaVendas() {
                 
                 const valorTotalVenda = mesa.vendas?.total || 0
                 const quantidadeMesas = (mesa.vendas && contagemMesasPorVenda[mesa.vendas.id]) || 1
-                const valorMesa = valorTotalVenda > 0 ? (valorTotalVenda / quantidadeMesas) : 50
+                const valorMesa = valorTotalVenda > 0 ? (valorTotalVenda / quantidadeMesas) : 40
 
                 let linkWhats = ''
                 if (comprador?.telefone) {
@@ -262,6 +267,7 @@ export function ListaVendas() {
                         )}
                       </div>
                     </td>
+                    <td style={{ fontSize: '12px', color: 'var(--gray-600)' }}>{(mesa.vendas as any)?.area_missionaria || '—'}</td>
                     <td style={{ fontWeight: 'bold', color: '#111827' }}>{formatarMoeda(valorMesa)}</td>
                     <td className="col-data">{formatarData(mesa.reservado_em)}</td>
                     <td style={{textAlign: 'right'}}>

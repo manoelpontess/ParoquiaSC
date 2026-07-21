@@ -21,7 +21,7 @@ const fallbackMesas: Mesa[] = Array.from({ length: 200 }, (_, i) => {
   return {
     numero: n,
     setor: n > 140 ? 'A' : n > 80 ? 'B' : n > 40 ? 'C' : 'D',
-    preco: 50,
+    preco: 40,
     status: 'livre',
   }
 })
@@ -33,7 +33,7 @@ export default function Home() {
   const mesasLivres = mesas.filter(m => m.status === 'livre').length
 
   const [selecionadas, setSelecionadas] = useState<Set<number>>(new Set())
-  const [preco, setPreco] = useState(50)
+  const [preco, setPreco] = useState(40)
   const [recebedorNome, setRecebedorNome] = useState('Paroquia Santa Cruz')
   const [recebedorCidade, setRecebedorCidade] = useState('Manaus')
 
@@ -43,7 +43,7 @@ export default function Home() {
   const [isConfirming, setIsConfirming] = useState(false)
   const [erroReserva, setErroReserva] = useState('')
 
-  const [compradorAtual, setCompradorAtual] = useState({ nome: '', telefone: '' })
+  const [compradorAtual, setCompradorAtual] = useState({ nome: '', telefone: '', areaMissionaria: '' })
   const [vendaAtual, setVendaAtual] = useState<{ id: string, total: number, mesas: number[] } | null>(null)
   const [payloadPix, setPayloadPix] = useState('')
 
@@ -66,8 +66,8 @@ export default function Home() {
     setModalCompradorOpen(true)
   }
 
-  const handleCompradorContinue = async (nome: string, telefone: string) => {
-    setCompradorAtual({ nome, telefone })
+  const handleCompradorContinue = async (nome: string, telefone: string, areaMissionaria: string) => {
+    setCompradorAtual({ nome, telefone, areaMissionaria })
     
     const supabase = createClient()
     const mesasArray = Array.from(selecionadas)
@@ -113,7 +113,7 @@ export default function Home() {
 
     const supabase = createClient()
     await supabase.rpc('confirmar_pagamento', { p_venda_id: vendaAtual.id })
-    await atualizarVenda(vendaAtual.id, formaPagamento, vendaAtual.total)
+    await atualizarVenda(vendaAtual.id, formaPagamento, vendaAtual.total, compradorAtual.areaMissionaria)
 
     try {
       if (OPENWA_URL && compradorAtual.telefone) {
@@ -158,7 +158,7 @@ export default function Home() {
   const handleFecharSucesso = () => {
     setSelecionadas(new Set())
     setVendaAtual(null)
-    setCompradorAtual({ nome: '', telefone: '' })
+    setCompradorAtual({ nome: '', telefone: '', areaMissionaria: '' })
     setModalSucessoOpen(false)
   }
 

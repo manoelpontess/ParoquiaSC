@@ -10,6 +10,7 @@ type VendaExtrato = {
   data: string
   formaPagamento: string
   valorMesa: number
+  areaMissionaria: string
 }
 
 export function Dashboard() {
@@ -46,7 +47,7 @@ export function Dashboard() {
           
           const valorTotalVenda = mesa.vendas.total || 0
           const quantidadeMesas = contagemMesasPorVenda[mesa.vendas.id] || 1
-          const VALOR_MESA = valorTotalVenda > 0 ? (valorTotalVenda / quantidadeMesas) : 50 // Fallback para antigas
+          const VALOR_MESA = valorTotalVenda > 0 ? (valorTotalVenda / quantidadeMesas) : 40 // Fallback para antigas
 
           extratoTemp.push({
             mesa: mesa.numero,
@@ -54,7 +55,8 @@ export function Dashboard() {
             telefone: comprador?.telefone || '',
             data: mesa.reservado_em,
             formaPagamento: forma,
-            valorMesa: VALOR_MESA
+            valorMesa: VALOR_MESA,
+            areaMissionaria: mesa.vendas.area_missionaria || '—'
           })
 
           tGeral += VALOR_MESA
@@ -161,6 +163,7 @@ export function Dashboard() {
                   <th style={{ width: '80px' }}>Mesa</th>
                   <th>Comprador</th>
                   <th>Telefone</th>
+                  <th>Área Missionária</th>
                   <th>Forma Pgto.</th>
                   <th>Valor</th>
                   <th>Data/Hora</th>
@@ -169,7 +172,7 @@ export function Dashboard() {
               <tbody>
                 {extrato.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>Nenhuma venda confirmada ainda.</td>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>Nenhuma venda confirmada ainda.</td>
                   </tr>
                 ) : (
                   extrato.map((v, i) => (
@@ -177,6 +180,7 @@ export function Dashboard() {
                       <td className="col-mesa"><b>{v.mesa.toString().padStart(3, '0')}</b></td>
                       <td>{v.comprador}</td>
                       <td>{v.telefone}</td>
+                      <td style={{ fontSize: '12px', color: 'var(--gray-600)' }}>{v.areaMissionaria}</td>
                       <td>{getFormaBadge(v.formaPagamento)}</td>
                       <td style={{ fontWeight: 'bold', color: '#111827' }}>{formatarMoeda(v.valorMesa)}</td>
                       <td className="col-data">{formatarData(v.data)}</td>

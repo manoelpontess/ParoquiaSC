@@ -26,6 +26,7 @@ export async function getListaVendas() {
         total,
         status,
         forma_pagamento,
+        area_missionaria,
         compradores (
           nome,
           telefone
@@ -43,7 +44,7 @@ export async function getListaVendas() {
   return data
 }
 
-export async function atualizarVenda(vendaId: string, formaPagamento: string, totalDaVenda: number) {
+export async function atualizarVenda(vendaId: string, formaPagamento: string, totalDaVenda: number, areaMissionaria: string) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { success: false, error: 'Configuração do Supabase ausente' }
   }
@@ -57,7 +58,8 @@ export async function atualizarVenda(vendaId: string, formaPagamento: string, to
     .from('vendas')
     .update({ 
       forma_pagamento: formaPagamento,
-      total: totalDaVenda 
+      total: totalDaVenda,
+      area_missionaria: areaMissionaria
     })
     .eq('id', vendaId)
 
@@ -139,6 +141,7 @@ export async function getListaCompletaParaExportacao() {
         total,
         status,
         forma_pagamento,
+        area_missionaria,
         compradores (
           nome,
           telefone

@@ -88,9 +88,9 @@ export function ModalPagamento({ isOpen, onClose, onConfirm, resumoMesas, total,
           <button className="ghost-btn" onClick={() => metodo ? setMetodo(null) : onClose()} disabled={isLoading}>
             {metodo ? 'Trocar Forma' : 'Voltar'}
           </button>
-          <button 
-            className="primary-btn" 
-            onClick={() => metodo && onConfirm(metodo)} 
+          <button
+            className="primary-btn"
+            onClick={() => metodo && onConfirm(metodo)}
             disabled={isLoading || !metodo}
           >
             {isLoading ? 'Confirmando...' : 'Confirmar recebimento'}
