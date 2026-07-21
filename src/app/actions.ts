@@ -22,7 +22,10 @@ export async function getListaVendas() {
       status,
       reservado_em,
       vendas (
+        id,
+        total,
         status,
+        forma_pagamento,
         compradores (
           nome,
           telefone
@@ -38,6 +41,32 @@ export async function getListaVendas() {
   }
 
   return data
+}
+
+export async function atualizarVenda(vendaId: string, formaPagamento: string, totalDaVenda: number) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { success: false, error: 'Configuração do Supabase ausente' }
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+
+  const { error } = await supabase
+    .from('vendas')
+    .update({ 
+      forma_pagamento: formaPagamento,
+      total: totalDaVenda 
+    })
+    .eq('id', vendaId)
+
+  if (error) {
+    console.error('Erro ao atualizar forma de pagamento:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
 }
 
 export async function liberarMesa(numeroMesa: number) {
@@ -66,3 +95,63 @@ export async function liberarMesa(numeroMesa: number) {
 
   return { success: true }
 }
+
+export async function getAllMesas() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return null
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+
+  const { data, error } = await supabase
+    .from('mesas')
+    .select('numero, setor, preco, status, venda_id, reservado_em')
+    .order('numero', { ascending: true })
+
+  if (error) {
+    console.error('Erro ao buscar todas as mesas:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function getListaCompletaParaExportacao() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return []
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+
+  const { data, error } = await supabase
+    .from('mesas')
+    .select(`
+      numero,
+      status,
+      vendas (
+        id,
+        total,
+        status,
+        forma_pagamento,
+        compradores (
+          nome,
+          telefone
+        )
+      )
+    `)
+    .order('numero', { ascending: true })
+
+  if (error) {
+    console.error('Erro ao buscar lista completa:', error)
+    return []
+  }
+
+  return data
+}
+

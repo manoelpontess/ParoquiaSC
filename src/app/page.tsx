@@ -3,13 +3,17 @@
 import { useState } from 'react'
 import { MapaMesas } from '@/components/MapaMesas'
 import { ModalComprador } from '@/components/ModalComprador'
-import { ModalPix } from '@/components/ModalPix'
+import { ModalPagamento } from '@/components/ModalPagamento'
 import { ModalSucesso } from '@/components/ModalSucesso'
 import { ListaVendas } from '@/components/ListaVendas'
 import { Configuracoes } from '@/components/Configuracoes'
+import { Dashboard } from '@/components/Dashboard'
 import { useMesasRealtime, Mesa } from '@/hooks/useMesasRealtime'
 import { createClient } from '@/lib/supabase/client'
 import { gerarPayloadPix } from '@/lib/pix'
+import { formatWhatsAppNumber } from '@/lib/whatsapp'
+import { OPENWA_URL, OPENWA_KEY, OPENWA_SESSION } from '@/lib/openwa'
+import { atualizarVenda } from '@/app/actions'
 
 // Fallback: todas livres — será substituído pelos dados reais do banco no hook
 const fallbackMesas: Mesa[] = Array.from({ length: 200 }, (_, i) => {
@@ -23,7 +27,7 @@ const fallbackMesas: Mesa[] = Array.from({ length: 200 }, (_, i) => {
 })
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'mapa' | 'lista' | 'config'>('mapa')
+  const [activeTab, setActiveTab] = useState<'mapa' | 'lista' | 'config' | 'dashboard'>('mapa')
   const mesas = useMesasRealtime(fallbackMesas)
 
   const mesasLivres = mesas.filter(m => m.status === 'livre').length
@@ -34,7 +38,7 @@ export default function Home() {
   const [recebedorCidade, setRecebedorCidade] = useState('Manaus')
 
   const [modalCompradorOpen, setModalCompradorOpen] = useState(false)
-  const [modalPixOpen, setModalPixOpen] = useState(false)
+  const [modalPagamentoOpen, setModalPagamentoOpen] = useState(false)
   const [modalSucessoOpen, setModalSucessoOpen] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
   const [erroReserva, setErroReserva] = useState('')
@@ -64,103 +68,90 @@ export default function Home() {
 
   const handleCompradorContinue = async (nome: string, telefone: string) => {
     setCompradorAtual({ nome, telefone })
-    setModalCompradorOpen(false)
-    setErroReserva('')
-
+    
     const supabase = createClient()
     const mesasArray = Array.from(selecionadas)
 
-    let venda_id = crypto.randomUUID()
-    let valor_final = total
-
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    try {
       const { data, error } = await supabase.rpc('reservar_mesas', {
         p_mesa_numeros: mesasArray,
         p_nome: nome,
         p_telefone: telefone,
       })
-      if (error) {
-        const mensagem = error.message?.includes('indisponív')
-          ? `Mesa já vendida por outra pessoa. Por favor, selecione outra.`
-          : `Erro ao reservar: ${error.message}`
-        setErroReserva(mensagem)
-        return
+
+      if (error) throw error
+
+      setVendaAtual({ id: data.venda_id, total: total, mesas: mesasArray })
+
+      let txidMesas = ''
+      if (mesasArray.length === 1) {
+        txidMesas = 'MESA' + mesasArray[0].toString().padStart(2, '0')
       } else {
-        venda_id = data.venda_id
-        valor_final = data.total
+        const nums = mesasArray.sort((a,b)=>a-b).map(m => m.toString().padStart(2, '0')).join('')
+        txidMesas = 'M' + nums.slice(0, 15)
       }
+
+      const pix = gerarPayloadPix({
+        chave: '04026811002590',
+        nome: recebedorNome || 'Paroquia Santa Cruz',
+        cidade: recebedorCidade || 'Manaus',
+        valor: total,
+        txid: 'BINGAOSC' + txidMesas,
+      })
+
+      setPayloadPix(pix)
+      setModalCompradorOpen(false)
+      setModalPagamentoOpen(true)
+    } catch (err: any) {
+      setErroReserva(`Erro ao reservar: ${err.message}`)
     }
-
-    setVendaAtual({ id: venda_id, total: valor_final, mesas: mesasArray })
-
-    // Cria o identificador do PIX baseado nas mesas
-    // O PIX aceita no máximo 25 caracteres alfanuméricos
-    let txidMesas = ''
-    if (mesasArray.length === 1) {
-      txidMesas = 'MESA' + mesasArray[0].toString().padStart(2, '0')
-    } else {
-      const nums = mesasArray.sort((a,b)=>a-b).map(m => m.toString().padStart(2, '0')).join('')
-      txidMesas = 'M' + nums.slice(0, 15) // Corta se forem MUITAS mesas para não quebrar o limite
-    }
-
-    const pix = gerarPayloadPix({
-      chave: '04026811002590',
-      nome: recebedorNome || 'Paroquia Santa Cruz',
-      cidade: recebedorCidade || 'Manaus',
-      valor: valor_final,
-      txid: 'BINGAOSC' + txidMesas,
-    })
-
-    setPayloadPix(pix)
-    setModalPixOpen(true)
   }
 
-  const handleConfirmarPagamento = async () => {
+  const handleConfirmarPagamento = async (formaPagamento: string) => {
     if (!vendaAtual) return
     setIsConfirming(true)
 
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      const supabase = createClient()
-      await supabase.rpc('confirmar_pagamento', { p_venda_id: vendaAtual.id })
-    }
+    const supabase = createClient()
+    await supabase.rpc('confirmar_pagamento', { p_venda_id: vendaAtual.id })
+    await atualizarVenda(vendaAtual.id, formaPagamento, vendaAtual.total)
 
-    // Dispara OpenWA se estiver configurado e tiver telefone
     try {
-      const url = localStorage.getItem('openwa_url')
-      const key = localStorage.getItem('openwa_key')
-      const session = localStorage.getItem('openwa_session') || 'default'
-      
-      if (url && compradorAtual.telefone) {
-        const numero = compradorAtual.telefone.replace(/\D/g, '')
-        if (numero) {
-          const numeroFinal = numero.length <= 11 ? `55${numero}` : numero
+      if (OPENWA_URL && compradorAtual.telefone) {
+        const numeroFinal = formatWhatsAppNumber(compradorAtual.telefone)
+        if (numeroFinal) {
           const mesasStr = vendaAtual.mesas.join(', ')
           const msg = `Olá ${compradorAtual.nome}, o pagamento da mesa ${mesasStr} no Bingão da Paróquia Santa Cruz foi confirmado com sucesso! 🎉`
 
-          const baseURL = url.replace(/\/$/, '')
-          await fetch(`${baseURL}/api/sendText`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': key ? `Bearer ${key}` : '',
-              'x-api-key': key || ''
-            },
-            body: JSON.stringify({
-              session: session,
-              chatId: `${numeroFinal}@c.us`,
-              phone: numeroFinal,
-              text: msg,
-              isGroup: false
-            })
-          }).catch(err => console.error('Erro ao chamar OpenWA:', err))
+          const baseURL = OPENWA_URL.replace(/\/$/, '')
+          const resList = await fetch(`${baseURL}/api/sessions`, {
+            headers: { 'x-api-key': OPENWA_KEY || '' }
+          })
+          if (resList.ok) {
+            const sessions = await resList.json()
+            const sessionData = sessions.find((s: any) => s.name === OPENWA_SESSION)
+            
+            if (sessionData && sessionData.id) {
+              await fetch(`${baseURL}/api/sessions/${sessionData.id}/messages/send-text`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-api-key': OPENWA_KEY || ''
+                },
+                body: JSON.stringify({
+                  chatId: `${numeroFinal}@c.us`,
+                  text: msg
+                })
+              })
+            }
+          }
         }
       }
     } catch (e) {
-      console.error('Erro geral ao notificar OpenWA:', e)
+      console.error('Erro ao notificar OpenWA:', e)
     }
 
     setIsConfirming(false)
-    setModalPixOpen(false)
+    setModalPagamentoOpen(false)
     setModalSucessoOpen(true)
   }
 
@@ -197,6 +188,12 @@ export default function Home() {
             onClick={() => setActiveTab('lista')}
           >
             📋 Lista de Vendas
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            📊 Extrato
           </button>
           <button
             className={`tab-btn ${activeTab === 'config' ? 'active' : ''}`}
@@ -265,10 +262,10 @@ export default function Home() {
             resumoMesas={`${selecionadas.size} mesa(s): ${listaMesasTexto()} — Total R$ ${total.toFixed(2).replace('.', ',')}`}
           />
 
-          <ModalPix
-            isOpen={modalPixOpen}
+          <ModalPagamento
+            isOpen={modalPagamentoOpen}
             onClose={() => {
-              setModalPixOpen(false)
+              setModalPagamentoOpen(false)
               setModalCompradorOpen(true)
             }}
             onConfirm={handleConfirmarPagamento}
@@ -290,6 +287,10 @@ export default function Home() {
 
       {activeTab === 'lista' && (
         <ListaVendas />
+      )}
+
+      {activeTab === 'dashboard' && (
+        <Dashboard />
       )}
 
       {activeTab === 'config' && (
