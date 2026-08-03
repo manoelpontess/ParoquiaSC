@@ -8,6 +8,7 @@ import { ModalSucesso } from '@/components/ModalSucesso'
 import { ListaVendas } from '@/components/ListaVendas'
 import { Configuracoes } from '@/components/Configuracoes'
 import { Dashboard } from '@/components/Dashboard'
+import { DisparedorMensagens } from '@/components/DisparedorMensagens'
 import { useMesasRealtime, Mesa } from '@/hooks/useMesasRealtime'
 import { createClient } from '@/lib/supabase/client'
 import { gerarPayloadPix } from '@/lib/pix'
@@ -27,7 +28,7 @@ const fallbackMesas: Mesa[] = Array.from({ length: 200 }, (_, i) => {
 })
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'mapa' | 'lista' | 'config' | 'dashboard'>('mapa')
+  const [activeTab, setActiveTab] = useState<'mapa' | 'lista' | 'config' | 'dashboard' | 'disparos'>('mapa')
   const mesas = useMesasRealtime(fallbackMesas)
 
   const mesasLivres = mesas.filter(m => m.status === 'livre').length
@@ -196,6 +197,12 @@ export default function Home() {
             📊 Extrato
           </button>
           <button
+            className={`tab-btn ${activeTab === 'disparos' ? 'active' : ''}`}
+            onClick={() => setActiveTab('disparos')}
+          >
+            📣 Disparos
+          </button>
+          <button
             className={`tab-btn ${activeTab === 'config' ? 'active' : ''}`}
             onClick={() => setActiveTab('config')}
           >
@@ -291,6 +298,10 @@ export default function Home() {
 
       {activeTab === 'dashboard' && (
         <Dashboard />
+      )}
+
+      {activeTab === 'disparos' && (
+        <DisparedorMensagens />
       )}
 
       {activeTab === 'config' && (

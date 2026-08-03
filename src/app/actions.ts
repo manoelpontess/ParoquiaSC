@@ -158,3 +158,58 @@ export async function getListaCompletaParaExportacao() {
   return data
 }
 
+export async function getTelefonesCompradores() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return []
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+
+  const { data, error } = await supabase
+    .from('mesas')
+    .select(`
+      numero,
+      status,
+      vendas (
+        id,
+        compradores (
+          nome,
+          telefone
+        )
+      )
+    `)
+    .neq('status', 'livre')
+    .order('numero', { ascending: true })
+
+  if (error) {
+    console.error('Erro ao buscar telefones dos compradores:', error)
+    return []
+  }
+
+  // Agrupa mesas por comprador (um comprador pode ter várias mesas)
+  const mapaCompradores: Record<string, { nome: string; telefone: string; mesas: number[] }> = {}
+
+  for (const mesa of data as any[]) {
+    const comprador = mesa.vendas?.compradores
+    if (!comprador?.telefone) continue
+
+    const chave = comprador.telefone.replace(/\D/g, '')
+    if (!chave) continue
+
+    if (!mapaCompradores[chave]) {
+      mapaCompradores[chave] = {
+        nome: comprador.nome || 'Comprador',
+        telefone: comprador.telefone,
+        mesas: [],
+      }
+    }
+    mapaCompradores[chave].mesas.push(mesa.numero)
+  }
+
+  return Object.values(mapaCompradores)
+}
+
+
