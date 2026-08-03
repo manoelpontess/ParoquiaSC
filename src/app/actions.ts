@@ -212,4 +212,72 @@ export async function getTelefonesCompradores() {
   return Object.values(mapaCompradores)
 }
 
+export async function atualizarTelefoneComprador(vendaId: string, novoTelefone: string) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { success: false, error: 'Configuração do Supabase ausente' }
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+
+  // Busca o comprador_id a partir da venda
+  const { data: venda, error: errVenda } = await supabase
+    .from('vendas')
+    .select('comprador_id')
+    .eq('id', vendaId)
+    .single()
+
+  if (errVenda || !venda?.comprador_id) {
+    return { success: false, error: 'Venda ou comprador não encontrado' }
+  }
+
+  const { error } = await supabase
+    .from('compradores')
+    .update({ telefone: novoTelefone })
+    .eq('id', venda.comprador_id)
+
+  if (error) {
+    console.error('Erro ao atualizar telefone:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function confirmarPagamentoReserva(vendaId: string, numeroMesa: number, formaPagamento: string) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { success: false, error: 'Configuração do Supabase ausente' }
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+
+  // Confirma pagamento na venda
+  const { error: errVenda } = await supabase
+    .from('vendas')
+    .update({ status: 'pago', forma_pagamento: formaPagamento })
+    .eq('id', vendaId)
+
+  if (errVenda) {
+    return { success: false, error: errVenda.message }
+  }
+
+  // Atualiza status da mesa para vendida
+  const { error: errMesa } = await supabase
+    .from('mesas')
+    .update({ status: 'vendida' })
+    .eq('numero', numeroMesa)
+
+  if (errMesa) {
+    return { success: false, error: errMesa.message }
+  }
+
+  return { success: true }
+}
+
+
 
