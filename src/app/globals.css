@@ -1122,3 +1122,134 @@ h1 {
     min-height: 44px;
   }
 }
+
+/* ============================================================
+   MAP TOOLBAR & MOBILE BLOCK ZOOM
+   ============================================================ */
+.floor-wrapper {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.mapa-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 16px 8px;
+  flex-wrap: wrap;
+}
+
+.blocos-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tab-bloco {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--gray-200);
+  background: var(--paper);
+  color: var(--gray-700);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.tab-bloco:hover {
+  border-color: var(--green-500);
+  background: var(--green-50);
+}
+
+.tab-bloco.active {
+  background: var(--green-700);
+  color: #FFFFFF;
+  border-color: var(--green-700);
+  box-shadow: var(--shadow-sm);
+}
+
+.badge-livres {
+  background: rgba(0,0,0,0.08);
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tab-bloco.active .badge-livres {
+  background: rgba(255,255,255,0.25);
+  color: #FFFFFF;
+}
+
+.print-mapa-btn {
+  background: linear-gradient(135deg, var(--green-700) 0%, var(--green-800) 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius);
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+}
+
+.print-mapa-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.block-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--green-800);
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Visão focada em 1 bloco no celular */
+.bloco-focused-container {
+  max-width: 520px;
+  margin: 16px auto;
+  padding: 0 16px;
+}
+
+.bloco-focused-header {
+  background: var(--paper);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 14px 16px;
+  border-bottom: 2px solid var(--green-600);
+}
+
+.bloco-focused-header h3 {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--green-900);
+}
+
+.bloco-focused-header .sub {
+  font-size: 12px;
+  color: var(--gray-500);
+  display: block;
+  margin-top: 2px;
+}
+
+.table-block.focused {
+  border-radius: 0 0 var(--radius) var(--radius);
+  border-top: none;
+  padding: 16px;
+}
+
