@@ -287,6 +287,8 @@ export default function Home() {
             onClose={handleFecharSucesso}
             mesas={vendaAtual?.mesas || []}
             comprador={compradorAtual.nome}
+            telefone={compradorAtual.telefone}
+            areaMissionaria={compradorAtual.areaMissionaria}
             total={vendaAtual?.total || 0}
           />
         </>
