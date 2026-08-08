@@ -256,10 +256,23 @@ export async function confirmarPagamentoReserva(vendaId: string, numeroMesa: num
     process.env.SUPABASE_SERVICE_ROLE_KEY
   )
 
-  // Confirma pagamento na venda
+  // Busca o preço real da mesa no banco para garantir o total correto
+  const { data: mesaData, error: errPreco } = await supabase
+    .from('mesas')
+    .select('preco')
+    .eq('numero', numeroMesa)
+    .single()
+
+  if (errPreco || !mesaData) {
+    return { success: false, error: errPreco?.message || 'Mesa não encontrada' }
+  }
+
+  const totalCorreto = mesaData.preco
+
+  // Confirma pagamento na venda atualizando também o total com o preço correto da mesa
   const { error: errVenda } = await supabase
     .from('vendas')
-    .update({ status: 'pago', forma_pagamento: formaPagamento })
+    .update({ status: 'pago', forma_pagamento: formaPagamento, total: totalCorreto })
     .eq('id', vendaId)
 
   if (errVenda) {

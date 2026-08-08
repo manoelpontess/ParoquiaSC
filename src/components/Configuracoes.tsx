@@ -172,7 +172,7 @@ export function Configuracoes() {
   }, [])
 
   const isConnected = sessionStatus === 'CONNECTED' || sessionStatus === 'AUTHENTICATED' || sessionStatus === 'READY'
-  const isDisconnected = sessionStatus === 'NOT_FOUND' || sessionStatus === 'ERROR'
+  const isDisconnected = sessionStatus === 'NOT_FOUND' || sessionStatus === 'ERROR' || sessionStatus === 'DISCONNECTED'
   const isWaiting = sessionStatus === 'QRCODE' || sessionStatus === 'UNAUTHENTICATED' || sessionStatus === 'CREATED' || sessionStatus === 'STARTING' || sessionStatus === 'INITIALIZING' || sessionStatus === 'QR_READY'
 
   return (

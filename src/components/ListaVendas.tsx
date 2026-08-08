@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { getListaVendas, liberarMesa, getListaCompletaParaExportacao, atualizarTelefoneComprador, confirmarPagamentoReserva } from '@/app/actions'
+import { ModalExportarPDF } from '@/components/ModalExportarPDF'
 
 export type MesaVendida = {
   numero: number
@@ -37,97 +38,12 @@ function gerarSetor(mesa: number): string {
   return 'Bloco D (dir. inferior)'
 }
 
-async function exportarLista() {
-  const dados = await getListaCompletaParaExportacao()
-  if (!dados || dados.length === 0) {
-    alert('Nenhum dado para exportar.')
-    return
-  }
-
-  const agora = new Date().toLocaleString('pt-BR')
-
-  const linhas = dados.map((m: any) => {
-    const venda = m.vendas
-    const comprador = venda?.compradores
-    const statusLabel = m.status === 'vendida' ? 'PAGO' : m.status === 'reservada' ? 'RESERVADA' : 'LIVRE'
-    const statusCor = m.status === 'vendida' ? '#16a34a' : m.status === 'reservada' ? '#d97706' : '#94a3b8'
-    const setor = gerarSetor(m.numero)
-    const area = venda?.area_missionaria || '—'
-    return `
-      <tr style="background:${m.status === 'livre' ? '#f9fafb' : 'white'}">
-        <td style="font-weight:700;color:#15803d;font-size:15px">#${String(m.numero).padStart(3,'0')}</td>
-        <td>${comprador?.nome || '<span style="color:#94a3b8">—</span>'}</td>
-        <td style="color:#4b5563">${comprador?.telefone || '—'}</td>
-        <td style="font-size:12px;color:#6b7280">${setor}</td>
-        <td style="font-size:12px">${area}</td>
-        <td><span style="background:${statusCor}22;color:${statusCor};padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">${statusLabel}</span></td>
-      </tr>`
-  }).join('')
-
-  const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lista de Mesas — Bingão Paróquia Santa Cruz</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Inter, sans-serif; color: #111827; padding: 24px; background: white; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #16a34a; }
-    .title { font-size: 22px; font-weight: 800; color: #14532d; }
-    .subtitle { font-size: 13px; color: #6b7280; margin-top: 4px; }
-    .meta { text-align: right; font-size: 12px; color: #6b7280; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #f0fdf4; padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #e5e7eb; }
-    td { padding: 9px 12px; border-bottom: 1px solid #f3f4f6; font-size: 13px; vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    .no-print { margin-bottom: 16px; }
-    @media print {
-      .no-print { display: none; }
-      body { padding: 12px; }
-    }
-  </style>
-</head>
-<body>
-  <div class="no-print">
-    <button onclick="window.print()" style="background:#16a34a;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimir / Salvar PDF</button>
-  </div>
-  <div class="header">
-    <div>
-      <div class="title">🎰 Bingão Paróquia Santa Cruz</div>
-      <div class="subtitle">Lista de Mesas — Controle de Entrada</div>
-    </div>
-    <div class="meta">Gerado em ${agora}<br>Total de mesas: ${dados.length}</div>
-  </div>
-  <table>
-    <thead>
-      <tr>
-        <th>Mesa</th>
-        <th>Comprador</th>
-        <th>Telefone</th>
-        <th>Local</th>
-        <th>Área Missionária</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>${linhas}</tbody>
-  </table>
-</body>
-</html>`
-
-  const janela = window.open('', '_blank')
-  if (janela) {
-    janela.document.write(html)
-    janela.document.close()
-  }
-}
-
 export function ListaVendas() {
   const [vendas, setVendas] = useState<MesaVendida[]>([])
   const [loading, setLoading] = useState(true)
   const [ultimaAtualiz, setUltimaAtualiz] = useState<Date | null>(null)
   const [processandoCancelamento, setProcessandoCancelamento] = useState<number | null>(null)
+  const [modalExportarOpen, setModalExportarOpen] = useState(false)
 
   // Edição de telefone
   const [editandoTelefone, setEditandoTelefone] = useState<number | null>(null)
@@ -234,8 +150,8 @@ export function ListaVendas() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button className="ghost-btn refresh-btn" onClick={exportarLista} title="Exportar lista de mesas ordenada 1→200 para imprimir na entrada">
-            📋 Exportar Lista
+          <button className="ghost-btn refresh-btn" onClick={() => setModalExportarOpen(true)} title="Exportar relatório de mesas separado por blocos em PDF">
+            📄 Exportar PDF por Blocos
           </button>
           <button className="ghost-btn refresh-btn" onClick={carregarVendas} disabled={loading}>
             {loading ? '⏳' : '🔄'} Atualizar
@@ -442,6 +358,11 @@ export function ListaVendas() {
           </table>
         </div>
       )}
+
+      <ModalExportarPDF
+        isOpen={modalExportarOpen}
+        onClose={() => setModalExportarOpen(false)}
+      />
     </div>
   )
 }
