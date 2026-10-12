@@ -58,7 +58,7 @@ export function imprimirComprovante(d: {
 <div class="no-print"><b>Comprovante da venda</b><button onclick="window.print()">Imprimir / Salvar PDF</button></div>
 <div class="card">
   <div class="top">
-    <small>${e(NOME_PAROQUIA)}</small>
+    ${NOME_PAROQUIA ? `<small>${e(NOME_PAROQUIA)}</small>` : ''}
     <h1>${e(NOME_EVENTO)}</h1>
     <p>Comprovante de mesa</p>
     <div class="badge">${status}</div>
@@ -67,7 +67,7 @@ export function imprimirComprovante(d: {
     <div class="row"><span>Comprador</span><span>${e(d.nome)}</span></div>
     ${d.telefone ? `<div class="row"><span>Telefone</span><span>${e(d.telefone)}</span></div>` : ''}
     <div class="row"><span>Mesa(s)</span><span class="mesas">${listaMesas(d.mesas)}</span></div>
-    ${d.pago ? `<div class="row"><span>Pagamento</span><span>${labelForma(d.forma)}</span></div>` : ''}
+    ${d.pago ? `<div class="row"><span>Pagamento</span><span>Pix</span></div>` : ''}
     ${d.responsavel ? `<div class="row"><span>Responsável</span><span>${e(d.responsavel)}</span></div>` : ''}
     <div class="row"><span>Data</span><span>${data}</span></div>
     <div class="total"><span style="font-weight:700">Total</span><b>${moeda(d.total)}</b></div>
@@ -127,7 +127,7 @@ export function imprimirLista(mesas: Mesa[], opcoes: { apenasOcupadas: boolean; 
 <div class="no-print"><b>Lista de controle das mesas</b><button onclick="window.print()">Imprimir / Salvar PDF</button></div>
 <div class="page">
   <div class="head">
-    <div><small>${e(NOME_PAROQUIA)}</small><h1>${e(NOME_EVENTO)} — Mesas</h1></div>
+    <div>${NOME_PAROQUIA ? `<small>${e(NOME_PAROQUIA)}</small>` : ''}<h1>${e(NOME_EVENTO)} — Mesas</h1></div>
     <p>Gerado em ${agora}</p>
   </div>
   <div class="stats">

@@ -1,6 +1,6 @@
-# 🎟️ Passeio Paroquial — Paróquia Santa Cruz
+# 🎟️ Passeio Paroquial
 
-Sistema moderno de **controle e gestão da venda de 50 mesas** para o Passeio Paroquial da Paróquia Santa Cruz, Manaus.
+Sistema moderno de **controle e gestão da venda de 50 mesas** para o Passeio Paroquial, Manaus.
 
 ---
 
@@ -72,4 +72,4 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## ✝️ Paróquia Santa Cruz — Manaus, AM
+## ✝️ Passeio Paroquial — Manaus, AM

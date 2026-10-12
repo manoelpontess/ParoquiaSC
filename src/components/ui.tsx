@@ -149,16 +149,10 @@ export function Avatar({ nome, size = 36 }: { nome: string; size?: number }) {
 // ------------------------------------------------------------
 export const COR_FORMA: Record<FormaPagamento, string> = {
   pix: 'var(--c-pix)',
-  dinheiro: 'var(--c-dinheiro)',
-  debito: 'var(--c-debito)',
-  credito: 'var(--c-credito)',
 }
 
 export function IconeForma({ forma, size = 20 }: { forma: FormaPagamento; size?: number }) {
-  if (forma === 'pix') return <QrCode size={size} />
-  if (forma === 'dinheiro') return <Banknote size={size} />
-  if (forma === 'debito') return <CreditCard size={size} />
-  return <Wallet size={size} />
+  return <QrCode size={size} />
 }
 
 // ------------------------------------------------------------

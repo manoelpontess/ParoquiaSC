@@ -74,8 +74,8 @@ export function ModalSucesso({
           )}
           {venda.pago && (
             <div className="details-row">
-              <span>Forma de pagamento</span>
-              <span>{labelForma(venda.forma)}</span>
+              <span>Pagamento</span>
+              <span>Pix</span>
             </div>
           )}
           <div className="details-row total">

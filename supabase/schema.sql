@@ -1,5 +1,5 @@
 -- ============================================================
---  PASSEIO PAROQUIAL — Paróquia Santa Cruz
+--  PASSEIO PAROQUIAL — Sistema de Gestão de Mesas
 --  Schema completo do banco (Supabase / PostgreSQL)
 --
 --  Como usar:

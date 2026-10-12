@@ -133,7 +133,7 @@ export function ModalMesa({
       responsavel: v.responsavel,
       forma: v.forma_pagamento,
       pago: mesa.status === 'vendida',
-      total: mesa.preco ?? 15,
+      total: mesa.preco ?? 30,
       data: v.created_at,
     })
   }
@@ -243,7 +243,7 @@ export function ModalMesa({
           </div>
           <div className="details-row">
             <span>Valor da mesa</span>
-            <span>{moeda(mesa.preco ?? 15)}</span>
+            <span>{moeda(mesa.preco ?? 30)}</span>
           </div>
           <div className="details-row">
             <span>Registrado em</span>

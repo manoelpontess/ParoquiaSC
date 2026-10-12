@@ -91,7 +91,7 @@ export function TabelaVendas({
 
   const totalArrecadadoFiltradas = filtradas
     .filter(m => m.status === 'vendida')
-    .reduce((s, m) => s + (m.preco ?? 15), 0)
+    .reduce((s, m) => s + (m.preco ?? 30), 0)
 
   const handleConfirmarPagamentoRapido = async () => {
     if (!confirmandoMesa?.venda) return
@@ -202,7 +202,6 @@ export function TabelaVendas({
                 <th>Comprador</th>
                 <th>Responsável</th>
                 <th>Status</th>
-                <th>Forma</th>
                 <th className="num">Valor</th>
                 <th>Data</th>
                 <th style={{ textAlign: 'right' }}>Ações</th>
@@ -243,7 +242,7 @@ export function TabelaVendas({
                     <td data-label="Status">
                       {isVendida ? (
                         <span className="badge badge-pago">
-                          <Check size={11} strokeWidth={3} /> Pago
+                          <Check size={11} strokeWidth={3} /> Pago (Pix)
                         </span>
                       ) : (
                         <span className="badge badge-reservada">
@@ -252,19 +251,8 @@ export function TabelaVendas({
                       )}
                     </td>
 
-                    <td data-label="Forma">
-                      {isVendida && v.forma_pagamento ? (
-                        <span className="pill-forma">
-                          <i style={{ background: COR_FORMA[v.forma_pagamento] }} />
-                          {labelForma(v.forma_pagamento)}
-                        </span>
-                      ) : (
-                        <span className="muted">—</span>
-                      )}
-                    </td>
-
                     <td data-label="Valor" className="num strong">
-                      {moeda(m.preco ?? 15)}
+                      {moeda(m.preco ?? 30)}
                     </td>
 
                     <td data-label="Data" className="muted" style={{ fontSize: 12 }}>
@@ -301,9 +289,9 @@ export function TabelaVendas({
                               nome: v.comprador.nome,
                               telefone: v.comprador.telefone,
                               responsavel: v.responsavel,
-                              forma: v.forma_pagamento,
+                              forma: 'pix',
                               pago: isVendida,
-                              total: m.preco ?? 15,
+                              total: m.preco ?? 30,
                               data: v.created_at,
                             })
                           }

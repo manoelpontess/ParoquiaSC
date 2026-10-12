@@ -208,7 +208,7 @@ export default function Home() {
         )}
 
         <footer className="footer">
-          Passeio Paroquial · Paróquia Santa Cruz — Manaus, AM
+          Passeio Paroquial — Manaus, AM
         </footer>
       </main>
     </ToastProvider>

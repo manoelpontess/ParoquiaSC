@@ -24,7 +24,7 @@ export function Hero({ mesas }: { mesas: Mesa[] }) {
             <Cross size={26} strokeWidth={2.4} />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div className="brand-eyebrow">{NOME_PAROQUIA}</div>
+            {NOME_PAROQUIA ? <div className="brand-eyebrow">{NOME_PAROQUIA}</div> : null}
             <h1>{NOME_EVENTO}</h1>
             <div className="brand-sub">Controle de venda das {TOTAL_MESAS} mesas</div>
           </div>

@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'Passeio Paroquial — Controle de Mesas',
-  description: 'Controle da venda das 50 mesas do Passeio Paroquial da Paróquia Santa Cruz, Manaus.',
+  description: 'Controle da venda das 50 mesas do Passeio Paroquial, Manaus.',
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',

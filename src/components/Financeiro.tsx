@@ -27,31 +27,12 @@ export function Financeiro({ mesas }: { mesas: Mesa[] }) {
   const reservadas = useMemo(() => mesas.filter(m => m.status === 'reservada'), [mesas])
 
   const totalArrecadado = useMemo(() => {
-    return vendidas.reduce((s, m) => s + (m.preco ?? 15), 0)
+    return vendidas.reduce((s, m) => s + (m.preco ?? 30), 0)
   }, [vendidas])
 
   const totalPendente = useMemo(() => {
-    return reservadas.reduce((s, m) => s + (m.preco ?? 15), 0)
+    return reservadas.reduce((s, m) => s + (m.preco ?? 30), 0)
   }, [reservadas])
-
-  // Por forma de pagamento
-  const totaisPorForma = useMemo(() => {
-    const res: Record<FormaPagamento, { valor: number; qtd: number }> = {
-      pix: { valor: 0, qtd: 0 },
-      dinheiro: { valor: 0, qtd: 0 },
-      debito: { valor: 0, qtd: 0 },
-      credito: { valor: 0, qtd: 0 },
-    }
-
-    for (const m of vendidas) {
-      const f = m.venda?.forma_pagamento
-      if (f && res[f]) {
-        res[f].valor += m.preco ?? 15
-        res[f].qtd += 1
-      }
-    }
-    return res
-  }, [vendidas])
 
   // Ranking de responsáveis
   const rankingResponsaveis = useMemo(() => {
@@ -61,7 +42,7 @@ export function Financeiro({ mesas }: { mesas: Mesa[] }) {
       const resp = m.venda?.responsavel?.trim() || 'Direto / Secretaria'
       const atual = mapa.get(resp) || { total: 0, qtd: 0 }
       mapa.set(resp, {
-        total: atual.total + (m.preco ?? 15),
+        total: atual.total + (m.preco ?? 30),
         qtd: atual.qtd + 1,
       })
     }
@@ -268,12 +249,10 @@ export function Financeiro({ mesas }: { mesas: Mesa[] }) {
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div className="feed-value">{moeda(m.preco ?? 15)}</div>
-                      {v.forma_pagamento && (
-                        <span className="badge badge-neutral" style={{ fontSize: 10, padding: '1px 6px' }}>
-                          {labelForma(v.forma_pagamento)}
-                        </span>
-                      )}
+                      <div className="feed-value">{moeda(m.preco ?? 30)}</div>
+                      <span className="badge badge-neutral" style={{ fontSize: 10, padding: '1px 6px' }}>
+                        Pix
+                      </span>
                     </div>
                   </div>
                 )

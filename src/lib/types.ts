@@ -2,10 +2,10 @@
 
 export const TOTAL_MESAS = 50
 export const NOME_EVENTO = 'Passeio Paroquial'
-export const NOME_PAROQUIA = 'Paróquia Santa Cruz'
+export const NOME_PAROQUIA = ''
 
 export type StatusMesa = 'livre' | 'reservada' | 'vendida'
-export type FormaPagamento = 'pix' | 'dinheiro' | 'debito' | 'credito'
+export type FormaPagamento = 'pix'
 
 export type Venda = {
   id: string
