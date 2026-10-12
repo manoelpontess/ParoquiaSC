@@ -39,7 +39,7 @@ export function ModalVenda({
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [responsavel, setResponsavel] = useState('')
-  const [opcao, setOpcao] = useState<Opcao | null>(null)
+  const [opcao, setOpcao] = useState<Opcao | null>('pix')
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -72,7 +72,7 @@ export function ModalVenda({
     setErro('')
     setSalvando(true)
     const pago = opcao !== 'reservar'
-    const forma = pago ? (opcao as FormaPagamento) : null
+    const forma = pago ? 'pix' : null
 
     const res = await registrarVenda({
       mesas: ordenadas,
@@ -93,7 +93,7 @@ export function ModalVenda({
       aberto
       onFechar={() => !salvando && onFechar()}
       titulo="Nova venda"
-      subtitulo="Preencha os dados do comprador e o pagamento"
+      subtitulo="Preencha os dados do comprador e pagamento via Pix"
       rodape={
         <>
           <button className="btn btn-secondary" onClick={onFechar} disabled={salvando}>Voltar</button>
@@ -104,7 +104,7 @@ export function ModalVenda({
             disabled={salvando}
           >
             {salvando && <LoaderCircle size={18} className="spin" />}
-            {salvando ? 'Salvando...' : opcao === 'reservar' ? 'Reservar mesas' : 'Confirmar venda'}
+            {salvando ? 'Salvando...' : opcao === 'reservar' ? 'Reservar mesas' : 'Confirmar recebimento Pix'}
           </button>
         </>
       }
@@ -166,31 +166,28 @@ export function ModalVenda({
         </div>
       </div>
 
-      <div className="divider-label">Pagamento</div>
+      <div className="divider-label">Pagamento (Apenas Pix)</div>
 
-      <div className="pay-grid">
-        {FORMAS_PAGAMENTO.map(f => (
-          <button
-            key={f.id}
-            id={`pagar-${f.id}`}
-            type="button"
-            className={`pay-opt ${opcao === f.id ? 'active' : ''}`}
-            style={{ ['--c' as string]: COR_FORMA[f.id] }}
-            onClick={() => { setOpcao(f.id); setErro('') }}
-          >
-            <IconeForma forma={f.id} size={22} />
-            {f.label}
-          </button>
-        ))}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          id="pagar-pix"
+          type="button"
+          className={`pay-opt ${opcao === 'pix' ? 'active' : ''}`}
+          style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', padding: '12px', ['--c' as string]: COR_FORMA['pix'] }}
+          onClick={() => { setOpcao('pix'); setErro('') }}
+        >
+          <IconeForma forma="pix" size={20} />
+          Pagar via Pix
+        </button>
         <button
           id="pagar-reservar"
           type="button"
           className={`pay-opt ${opcao === 'reservar' ? 'active' : ''}`}
-          style={{ ['--c' as string]: 'var(--amber)' }}
+          style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', padding: '12px', ['--c' as string]: 'var(--amber)' }}
           onClick={() => { setOpcao('reservar'); setErro('') }}
         >
-          <Hourglass size={22} />
-          Pagar depois
+          <Hourglass size={20} />
+          Pagar depois (Reserva)
         </button>
       </div>
 
@@ -203,24 +200,17 @@ export function ModalVenda({
             <div className="pix-label">Chave Pix · {chave.tipo}</div>
             <div className="pix-key">{chave.valor}</div>
             <div className="pix-name">{config.pix_nome} · {moeda(total)}</div>
-            <button className="btn btn-secondary btn-sm" onClick={copiarPix} id="copiar-pix">
+            <button className="btn btn-secondary btn-sm" onClick={copiarPix} id="copiar-pix" type="button">
               <Copy size={15} /> Copiar Pix copia e cola
             </button>
           </div>
         </div>
       )}
 
-      {opcao && opcao !== 'pix' && opcao !== 'reservar' && (
-        <div className="note-box">
-          <IconeForma forma={opcao} size={18} />
-          <span>Confirme o recebimento de <b>{moeda(total)}</b> no {FORMAS_PAGAMENTO.find(f => f.id === opcao)?.label.toLowerCase()} antes de concluir.</span>
-        </div>
-      )}
-
       {opcao === 'reservar' && (
         <div className="note-box amber">
           <Hourglass size={18} />
-          <span>As mesas {listaMesas(ordenadas)} ficarão <b>reservadas</b>. Confirme o pagamento depois, tocando na mesa ou na aba Vendas.</span>
+          <span>As mesas {listaMesas(ordenadas)} ficarão <b>reservadas</b>. O pagamento deverá ser feito via <b>Pix</b> posteriormente.</span>
         </div>
       )}
 

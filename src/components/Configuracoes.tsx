@@ -68,7 +68,7 @@ export function Configuracoes({
     const res = await salvarConfig({
       preco_mesa: valorNum,
       pix_chave: pixChave.trim(),
-      pix_nome: pixNome.trim() || 'Paróquia Santa Cruz',
+      pix_nome: pixNome.trim() || 'Maria Telma Moraes dos Santos',
       pix_cidade: pixCidade.trim() || 'Manaus',
     })
     setSalvandoGeral(false)
@@ -165,11 +165,11 @@ export function Configuracoes({
                       min="0"
                       value={precoMesa}
                       onChange={e => setPrecoMesa(e.target.value)}
-                      placeholder="15,00"
+                      placeholder="30,00"
                       required
                     />
                   </div>
-                  <span className="hint">Padrão definido: R$ 15,00</span>
+                  <span className="hint">Padrão definido: R$ 30,00</span>
                 </div>
 
                 <div className="field">
@@ -196,7 +196,7 @@ export function Configuracoes({
                     className="input"
                     value={pixNome}
                     onChange={e => setPixNome(e.target.value)}
-                    placeholder="Paróquia Santa Cruz"
+                    placeholder="Maria Telma Moraes dos Santos"
                   />
                 </div>
 

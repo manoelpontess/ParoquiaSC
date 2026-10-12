@@ -46,21 +46,18 @@ export type Resultado<T = undefined> =
   | { ok: false; error: string }
 
 export const CONFIG_PADRAO: Config = {
-  preco_mesa: 15,
+  preco_mesa: 30,
   pix_chave: '44539002287',
-  pix_nome: 'Paroquia Santa Cruz',
+  pix_nome: 'Maria Telma Moraes dos Santos',
   pix_cidade: 'Manaus',
 }
 
 export const FORMAS_PAGAMENTO: { id: FormaPagamento; label: string }[] = [
   { id: 'pix', label: 'Pix' },
-  { id: 'dinheiro', label: 'Dinheiro' },
-  { id: 'debito', label: 'Débito' },
-  { id: 'credito', label: 'Crédito' },
 ]
 
 export function labelForma(forma: FormaPagamento | null | undefined) {
-  return FORMAS_PAGAMENTO.find(f => f.id === forma)?.label ?? '—'
+  return forma === 'pix' ? 'Pix' : '—'
 }
 
 /** Agrupa as mesas ocupadas por venda */

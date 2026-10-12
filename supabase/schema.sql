@@ -17,9 +17,9 @@ create extension if not exists pgcrypto;
 -- ------------------------------------------------------------
 create table if not exists configuracoes (
   id          int primary key default 1 check (id = 1),
-  preco_mesa  numeric(10,2) not null default 15.00,
+  preco_mesa  numeric(10,2) not null default 30.00,
   pix_chave   text not null default '44539002287',          -- CPF 445.390.022-87
-  pix_nome    text not null default 'Paroquia Santa Cruz',
+  pix_nome    text not null default 'Maria Telma Moraes dos Santos',
   pix_cidade  text not null default 'Manaus',
   updated_at  timestamptz not null default now()
 );

@@ -333,7 +333,7 @@ export function TabelaVendas({
         <Modal
           aberto
           onFechar={() => setConfirmandoMesa(null)}
-          titulo={`Confirmar Pagamento · Mesa #${numMesa(confirmandoMesa.numero)}`}
+          titulo={`Confirmar Pagamento Pix · Mesa #${numMesa(confirmandoMesa.numero)}`}
           subtitulo={`Comprador: ${confirmandoMesa.venda?.comprador.nome}`}
           rodape={
             <>
@@ -345,29 +345,17 @@ export function TabelaVendas({
                 onClick={handleConfirmarPagamentoRapido}
                 disabled={salvandoRapido}
               >
-                {salvandoRapido ? 'Salvando...' : 'Confirmar como Pago'}
+                {salvandoRapido ? 'Salvando...' : 'Confirmar recebimento Pix'}
               </button>
             </>
           }
         >
-          <div style={{ marginBottom: 16 }}>
-            <div className="label" style={{ marginBottom: 8 }}>
-              Como o valor de {moeda(confirmandoMesa.preco ?? 15)} foi pago?
-            </div>
-            <div className="pay-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-              {FORMAS_PAGAMENTO.map(f => (
-                <button
-                  key={f.id}
-                  type="button"
-                  className={`pay-opt ${formaRapida === f.id ? 'active' : ''}`}
-                  style={{ ['--c' as string]: COR_FORMA[f.id] }}
-                  onClick={() => setFormaRapida(f.id)}
-                >
-                  <IconeForma forma={f.id} size={22} />
-                  {f.label}
-                </button>
-              ))}
-            </div>
+          <div style={{ padding: '8px 0 16px' }}>
+            <p style={{ fontSize: 14, color: 'var(--ink-2)' }}>
+              Confirmar o recebimento do <b>Pix</b> no valor de{' '}
+              <b>{moeda(confirmandoMesa.preco ?? 30)}</b> para a mesa{' '}
+              <b>#{numMesa(confirmandoMesa.numero)}</b>?
+            </p>
           </div>
         </Modal>
       )}

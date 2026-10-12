@@ -177,7 +177,7 @@ export function ModalMesa({
       }
     >
       {/* Box de confirmação de pagamento para reservas */}
-      {isReservada && !confirmandoPagamento && (
+      {isReservada && (
         <div
           style={{
             background: 'var(--green-soft)',
@@ -193,68 +193,25 @@ export function ModalMesa({
         >
           <div>
             <div style={{ fontWeight: 700, color: 'var(--green-strong)', fontSize: 13.5 }}>
-              Confirmar recebimento
+              Confirmar recebimento Pix
             </div>
             <div style={{ fontSize: 12, color: 'var(--green)' }}>
-              Esta mesa ainda não foi paga ({moeda(mesa.preco ?? 15)})
+              Esta mesa ainda não foi paga ({moeda(mesa.preco ?? 30)})
             </div>
           </div>
           <button
             className="btn btn-success btn-sm"
-            onClick={() => setConfirmandoPagamento(true)}
-            id="iniciar-confirmacao-pagamento"
+            onClick={handleConfirmarPagamento}
+            disabled={processandoPagamento}
+            id="confirmar-pix-btn"
           >
-            <Check size={16} /> Confirmar Pago
+            {processandoPagamento ? (
+              <LoaderCircle size={16} className="spin" />
+            ) : (
+              <Check size={16} />
+            )}
+            Confirmar Pix
           </button>
-        </div>
-      )}
-
-      {/* Seletor de forma de pagamento expandido */}
-      {confirmandoPagamento && (
-        <div
-          style={{
-            background: 'var(--surface-2)',
-            border: '1.5px solid var(--border-strong)',
-            borderRadius: 'var(--r)',
-            padding: '16px',
-            marginBottom: '16px',
-          }}
-        >
-          <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>
-            Selecione a forma de pagamento:
-          </div>
-          <div className="pay-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 12 }}>
-            {FORMAS_PAGAMENTO.map(f => (
-              <button
-                key={f.id}
-                type="button"
-                className={`pay-opt ${formaSelecionada === f.id ? 'active' : ''}`}
-                style={{ ['--c' as string]: COR_FORMA[f.id] }}
-                onClick={() => setFormaSelecionada(f.id)}
-              >
-                <IconeForma forma={f.id} size={20} />
-                {f.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() => setConfirmandoPagamento(false)}
-              disabled={processandoPagamento}
-            >
-              Cancelar
-            </button>
-            <button
-              className="btn btn-success btn-sm"
-              onClick={handleConfirmarPagamento}
-              disabled={processandoPagamento}
-              id="salvar-confirmacao-pagamento"
-            >
-              {processandoPagamento && <LoaderCircle size={15} className="spin" />}
-              Salvar como Pago
-            </button>
-          </div>
         </div>
       )}
 

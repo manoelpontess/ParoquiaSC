@@ -152,25 +152,67 @@ export function Financeiro({ mesas }: { mesas: Mesa[] }) {
       </div>
 
       <div className="fin-grid">
-        {FORMAS_PAGAMENTO.map(f => {
-          const dados = totaisPorForma[f.id]
-          return (
-            <div key={f.id} className="card fin-card">
-              <div className="fin-card-head">
-                <div className="fin-icon" style={{ ['--c' as string]: COR_FORMA[f.id] }}>
-                  <IconeForma forma={f.id} size={20} />
-                </div>
-                <div>
-                  <div className="fin-card-label">{f.label}</div>
-                  <div className="fin-card-meta" style={{ margin: 0 }}>
-                    {dados.qtd} mesa{dados.qtd === 1 ? '' : 's'}
-                  </div>
-                </div>
-              </div>
-              <div className="fin-card-value">{moeda(dados.valor)}</div>
+        <div className="card fin-card">
+          <div className="fin-card-head">
+            <div className="fin-icon" style={{ ['--c' as string]: 'var(--c-pix)' }}>
+              <QrCode size={20} />
             </div>
-          )
-        })}
+            <div>
+              <div className="fin-card-label">Pix Confirmado</div>
+              <div className="fin-card-meta" style={{ margin: 0 }}>
+                {vendidas.length} mesa{vendidas.length === 1 ? '' : 's'} pagas
+              </div>
+            </div>
+          </div>
+          <div className="fin-card-value">{moeda(totalArrecadado)}</div>
+        </div>
+
+        <div className="card fin-card">
+          <div className="fin-card-head">
+            <div className="fin-icon" style={{ ['--c' as string]: 'var(--amber)' }}>
+              <Clock size={20} />
+            </div>
+            <div>
+              <div className="fin-card-label">Pix a Receber</div>
+              <div className="fin-card-meta" style={{ margin: 0 }}>
+                {reservadas.length} mesa{reservadas.length === 1 ? '' : 's'} reservadas
+              </div>
+            </div>
+          </div>
+          <div className="fin-card-value">{moeda(totalPendente)}</div>
+        </div>
+
+        <div className="card fin-card">
+          <div className="fin-card-head">
+            <div className="fin-icon" style={{ ['--c' as string]: 'var(--primary)' }}>
+              <Coins size={20} />
+            </div>
+            <div>
+              <div className="fin-card-label">Mesas Disponíveis</div>
+              <div className="fin-card-meta" style={{ margin: 0 }}>
+                para novas vendas
+              </div>
+            </div>
+          </div>
+          <div className="fin-card-value">
+            {TOTAL_MESAS - vendidas.length - reservadas.length} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink-3)' }}>livres</span>
+          </div>
+        </div>
+
+        <div className="card fin-card">
+          <div className="fin-card-head">
+            <div className="fin-icon" style={{ ['--c' as string]: 'var(--green)' }}>
+              <TrendingUp size={20} />
+            </div>
+            <div>
+              <div className="fin-card-label">Meta Total (50 mesas)</div>
+              <div className="fin-card-meta" style={{ margin: 0 }}>
+                {moeda(30)} / mesa
+              </div>
+            </div>
+          </div>
+          <div className="fin-card-value">{moeda(TOTAL_MESAS * 30)}</div>
+        </div>
       </div>
 
       <div className="fin-cols">
