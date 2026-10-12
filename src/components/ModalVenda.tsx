@@ -1,12 +1,12 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { CircleAlert, Copy, Hourglass, LoaderCircle } from 'lucide-react'
+import { CircleAlert, Copy, LoaderCircle } from 'lucide-react'
 import { registrarVenda } from '@/app/actions'
 import { gerarPayloadPix } from '@/lib/pix'
-import { exibirChavePix, listaMesas, mascaraTelefone, moeda, numMesa } from '@/lib/format'
-import { FORMAS_PAGAMENTO, type Config, type FormaPagamento, type Responsavel } from '@/lib/types'
-import { COR_FORMA, IconeForma, Modal, useToast } from './ui'
+import { exibirChavePix, mascaraTelefone, moeda, numMesa } from '@/lib/format'
+import { type Config, type FormaPagamento, type Responsavel } from '@/lib/types'
+import { Modal, useToast } from './ui'
 
 export type VendaConcluida = {
   mesas: number[]
@@ -17,8 +17,6 @@ export type VendaConcluida = {
   pago: boolean
   total: number
 }
-
-type Opcao = FormaPagamento | 'reservar'
 
 export function ModalVenda({
   mesas,
@@ -39,7 +37,6 @@ export function ModalVenda({
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [responsavel, setResponsavel] = useState('')
-  const [opcao, setOpcao] = useState<Opcao | null>('pix')
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -67,25 +64,30 @@ export function ModalVenda({
 
   const confirmar = async () => {
     if (!nome.trim()) return setErro('Informe o nome do comprador.')
-    if (!opcao) return setErro('Escolha a forma de pagamento.')
 
     setErro('')
     setSalvando(true)
-    const pago = opcao !== 'reservar'
-    const forma = pago ? 'pix' : null
 
     const res = await registrarVenda({
       mesas: ordenadas,
       nome: nome.trim(),
       telefone,
       responsavel,
-      formaPagamento: forma,
-      pago,
+      formaPagamento: 'pix',
+      pago: true,
     })
     setSalvando(false)
 
     if (!res.ok) return setErro(res.error)
-    onConcluido({ mesas: ordenadas, nome: nome.trim(), telefone, responsavel, forma, pago, total })
+    onConcluido({
+      mesas: ordenadas,
+      nome: nome.trim(),
+      telefone,
+      responsavel,
+      forma: 'pix',
+      pago: true,
+      total,
+    })
   }
 
   return (
@@ -93,18 +95,18 @@ export function ModalVenda({
       aberto
       onFechar={() => !salvando && onFechar()}
       titulo="Nova venda"
-      subtitulo="Preencha os dados do comprador e pagamento via Pix"
+      subtitulo="Preencha os dados e confirme o recebimento do Pix"
       rodape={
         <>
           <button className="btn btn-secondary" onClick={onFechar} disabled={salvando}>Voltar</button>
           <button
             id="confirmar-venda"
-            className={opcao === 'reservar' ? 'btn btn-primary' : 'btn btn-success'}
+            className="btn btn-success"
             onClick={confirmar}
             disabled={salvando}
           >
             {salvando && <LoaderCircle size={18} className="spin" />}
-            {salvando ? 'Salvando...' : opcao === 'reservar' ? 'Reservar mesas' : 'Confirmar recebimento Pix'}
+            {salvando ? 'Salvando...' : 'Confirmar recebimento Pix'}
           </button>
         </>
       }
@@ -166,53 +168,21 @@ export function ModalVenda({
         </div>
       </div>
 
-      <div className="divider-label">Pagamento (Apenas Pix)</div>
+      <div className="divider-label">Pagamento via Pix</div>
 
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button
-          id="pagar-pix"
-          type="button"
-          className={`pay-opt ${opcao === 'pix' ? 'active' : ''}`}
-          style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', padding: '12px', ['--c' as string]: COR_FORMA['pix'] }}
-          onClick={() => { setOpcao('pix'); setErro('') }}
-        >
-          <IconeForma forma="pix" size={20} />
-          Pagar via Pix
-        </button>
-        <button
-          id="pagar-reservar"
-          type="button"
-          className={`pay-opt ${opcao === 'reservar' ? 'active' : ''}`}
-          style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', padding: '12px', ['--c' as string]: 'var(--amber)' }}
-          onClick={() => { setOpcao('reservar'); setErro('') }}
-        >
-          <Hourglass size={20} />
-          Pagar depois (Reserva)
-        </button>
+      <div className="pix-card">
+        <div className="pix-qr">
+          <QRCodeSVG value={payloadPix} size={148} level="M" />
+        </div>
+        <div className="pix-info">
+          <div className="pix-label">Chave Pix · {chave.tipo}</div>
+          <div className="pix-key">{chave.valor}</div>
+          <div className="pix-name">{config.pix_nome} · {moeda(total)}</div>
+          <button className="btn btn-secondary btn-sm" onClick={copiarPix} id="copiar-pix" type="button">
+            <Copy size={15} /> Copiar Pix copia e cola
+          </button>
+        </div>
       </div>
-
-      {opcao === 'pix' && (
-        <div className="pix-card">
-          <div className="pix-qr">
-            <QRCodeSVG value={payloadPix} size={148} level="M" />
-          </div>
-          <div className="pix-info">
-            <div className="pix-label">Chave Pix · {chave.tipo}</div>
-            <div className="pix-key">{chave.valor}</div>
-            <div className="pix-name">{config.pix_nome} · {moeda(total)}</div>
-            <button className="btn btn-secondary btn-sm" onClick={copiarPix} id="copiar-pix" type="button">
-              <Copy size={15} /> Copiar Pix copia e cola
-            </button>
-          </div>
-        </div>
-      )}
-
-      {opcao === 'reservar' && (
-        <div className="note-box amber">
-          <Hourglass size={18} />
-          <span>As mesas {listaMesas(ordenadas)} ficarão <b>reservadas</b>. O pagamento deverá ser feito via <b>Pix</b> posteriormente.</span>
-        </div>
-      )}
 
       {erro && <div className="form-error"><CircleAlert size={16} />{erro}</div>}
       <div style={{ height: 8 }} />
